@@ -1,0 +1,238 @@
+<html>
+
+<head>
+    <title>SNAKE</title>
+    <style>
+        .snake-body {
+            background-image: url("./images/snake-body.jpg");
+            background-size: 50px 50px;
+            color: white;
+            width: 50;
+            height: 50;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            border-style: solid;
+            border-color: white;
+            border-width: 1px;
+            border-radius: 7px;
+        }
+        
+        .snake-food {
+            background-image: url("./images/snake-food.jpg");
+            background-size: 50px 50px;
+            width: 50;
+            height: 50;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            border-radius: 7px;
+        }
+        
+        .snake-head {
+            background-size: 50px 50px;
+            background-image: url("./images/snake-head-right.jpg");
+        }
+        
+        .snake-field {
+            width: 1600;
+            height: 800;
+            border-style: solid;
+            border-color: black;
+            border-width: 1px;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="snakeBody1" class="snake-body"></div>
+    <div id="snakeData" class="snake-data"></div>
+    <div id="snakeFood" class="snake-food"></div>
+    <div id="snakeField" class="snake-field"></div>
+
+</body>
+
+<script>
+    var snakeSize;
+    var velocity;
+    var pixel = 50;
+    var step = pixel;
+    var snakeFieldH = 1600;
+    var snakeFieldV = 800;
+    var points = 0;
+
+    var snakeStepsMap;
+
+    var foodPosV;
+    var foodPosH;
+
+    var getSnakeBody = function(id) {
+        var idAttr = "snakeBody" + id;
+        var snakeBody = document.getElementById("snakeBody" + id);
+        if (snakeBody) {
+            return snakeBody;
+        }
+        var snakeBody = document.createElement("div");
+        snakeBody.classList.add('snake-body');
+        snakeBody.setAttribute("id", idAttr);
+        document.body.appendChild(snakeBody);
+        return snakeBody;
+    };
+
+    var rightFunc = function() {
+        snakeStepsMap['H-1'] += step;
+        var snakeHead = document.getElementById("snakeBody1");
+        snakeHead.style.backgroundImage = 'url("./images/snake-head-right.jpg")';
+    };
+
+    var leftFunc = function() {
+        snakeStepsMap['H-1'] -= step;
+        var snakeHead = document.getElementById("snakeBody1");
+        snakeHead.style.backgroundImage = 'url("./images/snake-head-left.jpg")';
+    };
+
+    var downFunc = function() {
+        snakeStepsMap['V-1'] += step;
+        var snakeHead = document.getElementById("snakeBody1");
+        snakeHead.style.backgroundImage = 'url("./images/snake-head-down.jpg")';
+    };
+
+    var upFunc = function() {
+        snakeStepsMap['V-1'] -= step;
+        var snakeHead = document.getElementById("snakeBody1");
+        snakeHead.style.backgroundImage = 'url("./images/snake-head-up.jpg")';
+    };
+
+    var stepFunc = rightFunc;
+
+    var updateInfo = function() {
+        points = (snakeSize - 1) * 10;
+        document.getElementById("snakeData").innerText = `Snake: H: ${snakeStepsMap['H-1']} V: ${snakeStepsMap['V-1']} | Food -> H: ${foodPosH} V: ${foodPosV} | Points: ${points}`;
+    };
+
+    var removeAllElements = function() {
+        for (let i = 1; i <= snakeSize; i++) {
+            document.getElementById("snakeBody" + i).remove();
+        }
+    };
+
+    var checkCollided = function() {
+
+        var headV = snakeStepsMap['V-1'];
+        var headH = snakeStepsMap['H-1'];
+
+        if (headV > snakeFieldV || headH > snakeFieldH || headV < 0 || headH < 0) {
+            alert(`You got ${points} Points !`);
+            resetGame();
+        }
+
+        for (let i = 2; i <= snakeSize; i++) {
+            if (headV === snakeStepsMap[`V-${i}`] && headH === snakeStepsMap[`H-${i}`]) {
+                alert(`You got ${points} Points !`);
+                resetGame();
+                break;
+            }
+        }
+
+    };
+
+    var updateSnake = function() {
+
+        for (let i = snakeSize; i > 1; i--) {
+            snakeStepsMap[`H-${i}`] = snakeStepsMap[`H-${i - 1}`];
+            snakeStepsMap[`V-${i}`] = snakeStepsMap[`V-${i - 1}`];
+        }
+
+        stepFunc();
+
+        for (let i = 1; i <= snakeSize; i++) {
+            getSnakeBody(i).style.left = snakeStepsMap[`H-${i}`] + "px";
+            getSnakeBody(i).style.top = snakeStepsMap[`V-${i}`] + "px";
+        }
+
+        if (snakeStepsMap['V-1'] === foodPosV && snakeStepsMap['H-1'] === foodPosH) {
+            changeFoodPosition();
+            snakeSize++;
+        };
+
+        checkCollided();
+
+        updateInfo();
+
+    };
+
+    var interval = setInterval(() => updateSnake(), velocity);
+
+    var resetInterval = function() {
+        clearInterval(interval);
+        interval = setInterval(() => updateSnake(), velocity);
+    }
+
+    var changeFoodPosition = function() {
+        var snakeFood = document.getElementById("snakeFood");
+        foodPosV = Math.floor((Math.random() * (snakeFieldV / pixel))) * pixel;
+        foodPosH = Math.floor((Math.random() * (snakeFieldH / pixel))) * pixel;
+        snakeFood.style.top = foodPosV + "px";
+        snakeFood.style.left = foodPosH + "px";
+        velocity -= 3;
+        resetInterval();
+    };
+
+    var resetGame = function() {
+        removeAllElements();
+        snakeSize = 1;
+        velocity = 500;
+        snakeStepsMap = {
+            'H-1': 0,
+            'V-1': 0
+        };
+        getSnakeBody(1).style.left = 0;
+        getSnakeBody(1).style.top = 0;
+        stepFunc = rightFunc;
+        resetInterval();
+        var snakeHead = document.getElementById("snakeBody1");
+        snakeHead.classList.add('snake-head')
+    };
+
+    resetGame();
+
+    changeFoodPosition(foodPosV, foodPosH);
+
+    document.onkeydown = function(e) {
+        e = e || window.event;
+        if (e.keyCode == '38') {
+            if (stepFunc !== downFunc) {
+                stepFunc = upFunc;
+            }
+        } else if (e.keyCode == '40') {
+            if (stepFunc !== upFunc) {
+                stepFunc = downFunc;
+            }
+        } else if (e.keyCode == '37') {
+            if (stepFunc !== rightFunc) {
+                stepFunc = leftFunc;
+            }
+        } else if (e.keyCode == '39') {
+            if (stepFunc !== leftFunc) {
+                stepFunc = rightFunc;
+            }
+        } else if (e.keyCode == '39') {
+            if (stepFunc !== leftFunc) {
+                stepFunc = rightFunc;
+            }
+        } else if (e.keyCode == '187') {
+            velocity = velocity - 20;
+            resetInterval();
+        } else if (e.keyCode == '189') {
+            velocity = velocity + 20;
+            resetInterval();
+        }
+    }
+</script>
+
+
+</html>
