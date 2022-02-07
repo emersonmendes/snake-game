@@ -125,7 +125,7 @@
         var headV = snakeStepsMap['V-1'];
         var headH = snakeStepsMap['H-1'];
 
-        if (headV > snakeFieldV || headH > snakeFieldH || headV < 0 || headH < 0) {
+        if (headV >= snakeFieldV || headH >= snakeFieldH || headV < 0 || headH < 0) {
             alert(`You got ${points} Points !`);
             resetGame();
         }
@@ -181,6 +181,10 @@
         velocity -= 3;
         resetInterval();
     };
+
+    setInterval(() => {
+        changeFoodPosition();
+    }, 3000);
 
     var resetGame = function() {
         removeAllElements();
